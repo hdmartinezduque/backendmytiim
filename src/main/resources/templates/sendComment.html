@@ -1,0 +1,135 @@
+<html
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+
+>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta
+            name="viewport"
+            content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+            href="https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap"
+            rel="stylesheet"
+    />
+    <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+            rel="stylesheet"
+    />
+</head>
+<header>
+    <div
+            style="
+          background-color: #292929;
+          display: flex;
+          align-items: center;
+          text-align: center;
+          width: 100%;
+          min-height: 108px;
+        "
+    >
+        <img
+                src="../images/atom-logo-primary.svg"
+                th:src="|cid:${imageResourceName}|"
+                width="167"
+                height="71"
+                style="margin: auto"
+        />
+    </div>
+</header>
+<body
+        style="background-color: #f2fffb; align-items: center; text-align: center"
+>
+<div
+        style="
+          font-size: 22px;
+          font-family: 'Nunito', sans-serif;
+          padding-top: 40px;
+          padding-bottom: 20px;
+          max-width: 428px;
+          margin: auto;
+        "
+>
+    Hola, <b th:text="${name}" ,></b> ha agregado un Comentario
+    nuevo
+</div>
+
+<hr
+        style="
+          width: 85%;
+          min-width: 526px;
+          margin-bottom: 22px;
+          border-top: 5px solid #00ffb1;
+          border-radius: 5px;
+        "
+/>
+
+<div
+        style="
+          min-height: 128px;
+          min-width: 526px;
+          width: 85%;
+          background-color: white;
+          margin: auto;
+          font-family: 'Roboto', sans-serif;
+          align-items: start;
+          text-align: left;
+          padding: 16px;
+        "
+>
+    <b
+            th:text="${name}"
+            ,
+            style="padding-right: 4px; font-weight: 700; font-size: 16px"
+    ></b>
+    <b
+            th:text="${commentDate}"
+            ,
+            style="padding-right: 4px; font-weight: 400; font-size: 16px"
+    ></b>
+    <br />
+    <div
+            style="
+            font-weight: 700;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+          "
+    >
+        Retroalimentación
+    </div>
+
+    <b
+            th:text="${commentContent}"
+            ,
+            style="padding-right: 4px; font-weight: 400; font-size: 16px"
+    ></b>
+</div>
+<button
+        style="
+          border-radius: 100px;
+          min-width: 310px;
+          min-height: 52px;
+          margin-top: 37px;
+          margin-bottom: 37px;
+          background-color: #0061ff;
+          color: white;
+          font-size: 14px;
+          border-color: #0062ff00;
+          font-family: 'Roboto', sans-serif;
+          font-weight: 700;
+        "
+>
+    Responder comentario
+</button>
+</body>
+</html>
+</html>
