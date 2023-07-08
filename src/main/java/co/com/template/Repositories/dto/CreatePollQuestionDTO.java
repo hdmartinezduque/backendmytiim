@@ -1,6 +1,5 @@
 package co.com.template.Repositories.dto;
 
-import co.com.template.Repositories.entities.PollQuestion;
 import lombok.Data;
 
 @Data

@@ -10,8 +10,7 @@ import java.util.List;
 @Repository
 public interface PollQuestionRepository extends JpaRepository<PollQuestion, Long> {
 
-    PollQuestion findByPollQuestionId(Long pollQuestionId);
-    PollQuestion findByPollPollIdAndQuestionQuestionId(Long pollId, Long questionID);
+
 
     List<PollQuestion> findByPollPollId(Long pollId);
 }

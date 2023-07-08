@@ -1,11 +1,9 @@
 package co.com.template.Repositories.entities;
 
-import co.com.template.utils.Constants;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import java.io.Serializable;
-import java.util.List;
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -46,9 +44,11 @@ public class Objective implements Serializable {
 	@Column(name="objective_observations")
 	private String objectiveObservations;
 
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "objective", cascade = CascadeType.ALL)
-	private List<Commitment> commitments;
+	@Column(name="objective_created_date")
+	private LocalDate createDate;
 
-
+	@ManyToOne(fetch = FetchType.EAGER, optional = false)
+	@JoinColumn(name = "objective_period_id", nullable = false)
+	private Period period;
 
 }

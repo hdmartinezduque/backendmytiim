@@ -27,8 +27,6 @@ public class Group implements Serializable{
 	@Column(name="group_code")
 	private String groupCode;
 
-
-
 }
 
 

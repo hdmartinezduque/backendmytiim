@@ -1,9 +1,6 @@
 package co.com.template.Controllers;
 
-import co.com.template.Repositories.dto.CreateCommentDTO;
-import co.com.template.Repositories.dto.CreateRecognitionDTO;
-import co.com.template.Repositories.dto.ResponseDTO;
-import co.com.template.Repositories.entities.Comment;
+import co.com.template.Repositories.dto.*;
 import co.com.template.services.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,13 +42,15 @@ public class CommentController {
 		}
 	}
 
-	@GetMapping("/recognition/list")
-	public ResponseEntity<Object> getCommentRecognition() {
+	@PostMapping("/recognition/list")
+	public ResponseEntity<Object> getCommentRecognition(@Valid @RequestBody RecognitionFilterDTO recognitionFilterDTO) {
 		try {
-			return ResponseEntity.status(HttpStatus.OK).body(commentService.getCommentRecognition());
+			return ResponseEntity.status(HttpStatus.OK).body(commentService.getCommentRecognition(recognitionFilterDTO));
 		} catch(Exception err){
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDTO(HttpStatus.BAD_REQUEST,err.getMessage(),null));
 		}
 	}
+
+
 
 }

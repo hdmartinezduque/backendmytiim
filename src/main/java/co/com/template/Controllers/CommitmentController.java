@@ -48,7 +48,6 @@ public class CommitmentController {
     }
     @PostMapping("/advance")
     public ResponseEntity<Object> advanceCommitment(@RequestBody AdvanceCommitmentDTO advance) {
-        log.info("Leyendo1");
         try {
             return ResponseEntity.status(HttpStatus.OK).body(commitmentService.advanceCommitment(advance));
         } catch(Exception err){

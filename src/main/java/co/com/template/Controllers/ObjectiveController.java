@@ -1,9 +1,6 @@
 package co.com.template.Controllers;
 
-import co.com.template.Repositories.dto.CloseObjectiveDTO;
-import co.com.template.Repositories.dto.CreateObjectiveDTO;
-import co.com.template.Repositories.dto.ObjectiveEditionDTO;
-import co.com.template.Repositories.dto.ResponseDTO;
+import co.com.template.Repositories.dto.*;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,5 +115,15 @@ public class ObjectiveController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDTO(HttpStatus.BAD_REQUEST,err.getMessage(),null));
 		}
 	}
+
+	@PostMapping("/list")
+	public ResponseEntity<Object> findObjectiveFilter(@Valid @RequestBody ObjectiveFilterDTO objectiveFilterDTO) {
+		try {
+			return ResponseEntity.status(HttpStatus.OK).body(objectiveService.findObjectiveFilter(objectiveFilterDTO));
+		} catch(Exception err){
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDTO(HttpStatus.BAD_REQUEST,err.getMessage(),null));
+		}
+	}
+
 
 }

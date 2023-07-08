@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -52,10 +54,25 @@ public class User implements Serializable {
     @Column(name="user_user")
     public String user;
 
+    @Column(name="user_created_date")
+    private LocalDate createDate;
+
+    @Column(name = "user_leader_id")
+    private Long leaderId;
+
+    @Column(name = "user_last_login")
+    private LocalDateTime lastLogin;
+
+
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(  name = "t_roll_user",
             joinColumns = @JoinColumn(name = "roll_roll_user_id"),
             inverseJoinColumns = @JoinColumn(name = "roll_roll_id"))
     private Set<Roll> rolls = new HashSet<>();
+
+    @Column(name = "user_activated_date")
+    private LocalDate activatedDate;
+
 
 }

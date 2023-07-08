@@ -20,6 +20,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Service
@@ -40,6 +42,8 @@ public class AuthenticationService {
         try{
             User user=userRepository.findByUser(request.getUsername());
             if(Objects.nonNull(user) && Util.getEncoder().matches(request.getPassword(),  user.getUserPassword())){
+                user.setLastLogin(LocalDateTime.now());
+                userRepository.save(user);
                 UserDTO response =new UserDTO(user);
                 String jwt = jwtUtils.generateJwtToken(response);
                 response.setToken(jwt);
@@ -61,6 +65,7 @@ public class AuthenticationService {
                     user.setUserPassword(Util.getEncoder().encode(request.getPassword()));
                     Status status = statusRepository.findByStatusId(StatusEnum.ACTIVE_USER.getId());
                     user.setStatus(status);
+                    user.setActivatedDate(LocalDate.now());
                     userRepository.save(user);
                     return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, Boolean.TRUE);
                 }

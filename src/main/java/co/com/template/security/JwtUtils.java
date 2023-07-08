@@ -2,9 +2,11 @@ package co.com.template.security;
 
 import co.com.template.Repositories.dto.UserDTO;
 import co.com.template.exception.CustomException;
+import co.com.template.utils.Constants;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
@@ -17,20 +19,22 @@ import java.util.Map;
 
 @Component
 @Log4j2
+@Getter
 public class JwtUtils {
     @Value("${security.app.jwtSecret}")
     private String jwtSecret;
 
     @Value("${security.app.jwtExpirationMs}")
     private int jwtExpirationMs;
+
+
     public String generateJwtToken(UserDTO userDTO) {
 
         //UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
         Map<String, Object> claims= new HashMap<>();
-        claims.put("userId",userDTO.getUserId());
-        claims.put("user",userDTO.getUser());
-        claims.put("username",userDTO.getUserName());
-        claims.put("roles",userDTO.getRoles());
+        claims.put(Constants.USER_ID_TOKEN,userDTO.getUserId());
+        claims.put(Constants.USER_NAME_TOKEN,userDTO.getUserName());
+        claims.put(Constants.ROLES_TOKEN,userDTO.getRoles());
 
         return Jwts.builder()
                 .setSubject((userDTO.getUser()))
@@ -48,6 +52,10 @@ public class JwtUtils {
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key()).build()
                 .parseClaimsJws(token).getBody().getSubject();
+    }
+    public Long getUserIdFromJwtToken(String token) {
+        return Long.parseLong(Jwts.parserBuilder().setSigningKey(key()).build()
+                .parseClaimsJws(token).getBody().get(Constants.USER_ID_TOKEN).toString());
     }
 
     public boolean validateJwtToken(String authToken) {

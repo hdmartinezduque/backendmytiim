@@ -1,15 +1,14 @@
 package co.com.template.Repositories.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name ="t_poll")
 public class Poll implements Serializable {
@@ -34,4 +33,24 @@ public class Poll implements Serializable {
     @OneToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "poll_period_id", nullable = false)
     private Period period;
+
+    @Column(name="poll_start")
+    private LocalDate start;
+
+    @Column(name="poll_end")
+    private LocalDate end;
+
+    @Column(name="poll_index")
+    private Integer index;
+
+    public Poll(Period period, Status status, String code, String describe, LocalDate start, LocalDate end, Integer index){
+        this.setPeriod(period);
+        this.setStatus(status);
+        this.setIndex(index);
+        this.setCode(code);
+        this.setDescribe(describe);
+        this.setStart(start);
+        this.setEnd(end);
+    }
+
 }

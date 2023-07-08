@@ -4,6 +4,8 @@ import co.com.template.utils.Constants;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.springframework.stereotype.Component;
+
 import java.io.Serializable;
 
 @Data
@@ -11,6 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Entity
 @Table(name ="t_objective_type")
+@Component
 public class ObjectiveType implements Serializable {
 
 	private static final long serialVersionUID = 5022341805021141326L;
@@ -26,7 +29,5 @@ public class ObjectiveType implements Serializable {
 
 	@Column(name="objective_type_status_id")
 	private Integer objectiveTypeStatusId;
-
-
 
 }

@@ -16,6 +16,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findTop20ByObjectiveObjectiveIdOrderByCommentDateDesc(Long objectiveId);
 
 
+    List<Comment> findTop20ByCommentCommentTypeCommentTypeIdOrderByCommentDateDesc(Long typeId);
+
     List<Comment> findTop20ByOrderByCommentDateDesc();
 
 

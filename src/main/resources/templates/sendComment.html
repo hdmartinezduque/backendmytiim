@@ -37,8 +37,7 @@
         "
     >
         <img
-                src="../images/atom-logo-primary.svg"
-                th:src="|cid:${imageResourceName}|"
+                src="http://190.144.118.234/assets/icons/atom-logo-primary.svg"
                 width="167"
                 height="71"
                 style="margin: auto"
@@ -86,7 +85,7 @@
         "
 >
     <b
-            th:text="${name}"
+            th:text="${name + ' ' +  lastname}"
             ,
             style="padding-right: 4px; font-weight: 700; font-size: 16px"
     ></b>

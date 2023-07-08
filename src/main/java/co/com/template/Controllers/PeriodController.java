@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
 @Controller
@@ -20,13 +21,14 @@ public class PeriodController {
 
 
     @GetMapping
-    public ResponseEntity<Object> getPeriods(){
+    public ResponseEntity<Object> getPeriods(@RequestParam("active") Integer active){
         try {
-            return ResponseEntity.status(HttpStatus.OK).body(periodService.getPeriod());
+            return ResponseEntity.status(HttpStatus.OK).body(periodService.getPeriod(active));
         }catch (Exception err) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDTO(HttpStatus.BAD_REQUEST, err.getMessage(), null));
         }
     }
+
 }
 
 

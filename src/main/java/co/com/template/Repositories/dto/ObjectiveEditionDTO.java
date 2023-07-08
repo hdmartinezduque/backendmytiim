@@ -7,4 +7,5 @@ public class ObjectiveEditionDTO {
 
     private String objectiveDescribe;
     private Long objectiveTypeId;
+    private Long periodId;
 }

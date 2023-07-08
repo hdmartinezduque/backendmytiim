@@ -3,6 +3,7 @@ package co.com.template.services;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -42,15 +43,21 @@ public class ObjectiveService {
     @Autowired
     private MeasureRepository measureRepository;
 
+    @Autowired
+    private GroupRepository groupRepository;
+
+    @Autowired
+    private PeriodRepository periodRepository;
     public ResponseDTO getObjective() {
-        return new ResponseDTO(HttpStatus.OK,Constants.EMPTY_MESSAGE, objectiveRepository.findAll());
+        return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, objectiveRepository.findAll());
     }
 
-    public ResponseDTO setObjective(CreateObjectiveDTO request){
-        try{
+    public ResponseDTO setObjective(CreateObjectiveDTO request) {
+        try {
             ObjectiveType type = objectiveTypeRepository.findByObjectiveTypeId(request.getObjectiveTypeId());
             Status status = statusRepository.findByStatusId(StatusEnum.ACTIVE_OBJECTIVE.getId());
             User user = userRepository.findByUserId(request.getUserId());
+            Period period = periodRepository.findByPeriodId(request.getPeriodId());
             Objective entity = new Objective();
             entity.setObjectiveDescribe(request.getObjectiveDescribe());
             entity.setObjectiveQualify(Constants.MIN_VALUE_QUALIFY);
@@ -58,10 +65,9 @@ public class ObjectiveService {
             entity.setStatus(status);
             entity.setUser(user);
             entity.setGroup(user.getGroup());
+            entity.setPeriod(period);
 
             entity = objectiveRepository.save(entity);
-            long objectiveId = entity.getObjectiveId();
-
             List<Commitment> commitmentsEntity = new ArrayList<>();
             List<CommitmentDTO> commitmentDTOS = request.getCommitments();
 
@@ -69,27 +75,20 @@ public class ObjectiveService {
                 Commitment commitment = new Commitment();
                 commitment.setObjective(entity);
                 commitment.setCommitmentDescribe(c.getCommitmentDescribe());
-                commitment.setCommitmentDate(LocalDate.parse(c.getCommitmentDate().substring(Constants.ZERO_INDEX,Constants.TEN_INDEX)));
+                commitment.setCommitmentDate(LocalDate.parse(c.getCommitmentDate().substring(Constants.ZERO_INDEX, Constants.TEN_INDEX)));
                 commitment.setCommitmentGoal(c.getCommitmentGoal());
-
                 Long measureId = c.getMeasureId();
                 Measure measure = measureRepository.findByMeasureId(measureId);
                 commitment.setMeasure(measure);
-
                 commitment.setCommitmentAdvance(c.getCommitmentAdvance());
-
                 commitmentsEntity.add(commitment);
-
             }
 
-            entity.setCommitments(commitmentsEntity);
-
             commitmentRepository.saveAll(commitmentsEntity);
-
-            return new ResponseDTO(HttpStatus.OK,Constants.EMPTY_MESSAGE, Boolean.TRUE);
-        }catch(Exception err){
+            return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, Boolean.TRUE);
+        } catch (Exception err) {
             log.error(err.getMessage(), err);
-            return new ResponseDTO(HttpStatus.BAD_REQUEST,err.getMessage(), null);
+            return new ResponseDTO(HttpStatus.BAD_REQUEST, err.getMessage(), null);
         }
     }
 
@@ -99,21 +98,22 @@ public class ObjectiveService {
         Objective entity = objectiveRepository.findByObjectiveId(objectiveId);
 
         if (Objects.isNull(entity)) {
-            return new ResponseDTO(HttpStatus.OK,Constants.OBJECT_NOT_EXISTS_ERROR, null);
+            return new ResponseDTO(HttpStatus.OK, Constants.OBJECT_NOT_EXISTS_ERROR, null);
         }
 
         ObjectiveType type = objectiveTypeRepository.findByObjectiveTypeId(objective.getObjectiveTypeId());
-
+        Period period = periodRepository.findByPeriodId(objective.getPeriodId());
         entity.setObjectiveDescribe(objective.getObjectiveDescribe());
         entity.setObjectiveType(type);
+        entity.setPeriod(period);
         objectiveRepository.save(entity);
-        return new ResponseDTO(HttpStatus.OK,Constants.EMPTY_MESSAGE, Boolean.TRUE);
+        return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, Boolean.TRUE);
     }
 
 
-    public ResponseDTO deleteObjective(Long id)  {
+    public ResponseDTO deleteObjective(Long id) {
         objectiveRepository.deleteById(id);
-        return new ResponseDTO(HttpStatus.OK,Constants.EMPTY_MESSAGE, Boolean.TRUE);
+        return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, Boolean.TRUE);
     }
 
     public ResponseDTO getObjectiveById(Long objectiveId) {
@@ -121,7 +121,7 @@ public class ObjectiveService {
         if (Objects.isNull(objectiveId)) {
             throw new CustomException(Constants.OBJECT_NOT_EXISTS_ERROR, HttpStatus.OK);
         }
-        return new ResponseDTO(HttpStatus.OK,Constants.EMPTY_MESSAGE, new ObjetiveDTO(objective));
+        return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, new ObjetiveDTO(objective));
     }
 
     public ResponseDTO getObjectiveForGroupAndForUser(Long GroupGroupId, Long UserUserId) {
@@ -135,7 +135,6 @@ public class ObjectiveService {
         }
         return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, dtoList);
     }
-
 
 
     public ResponseDTO getObjectiveForUser(Long UserUserId) {
@@ -152,56 +151,109 @@ public class ObjectiveService {
     }
 
 
-
     public ResponseDTO getObjectiveForGroup(Long GroupGroupId) {
         List<Objective> list = objectiveRepository.findByGroupGroupId(GroupGroupId);
         return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, list);
     }
 
 
-
     public ResponseDTO closeObjective(Long objectiveId, CloseObjectiveDTO objective) {
-        try{
+        try {
             Objective entity = objectiveRepository.findByObjectiveId(objectiveId);
             if (Objects.isNull(entity)) {
-                return new ResponseDTO(HttpStatus.OK,Constants.OBJECT_NOT_EXISTS_ERROR, null);
+                return new ResponseDTO(HttpStatus.OK, Constants.OBJECT_NOT_EXISTS_ERROR, null);
             }
 
             if (objective.getStatusId().equals(StatusEnum.CLOSED_OBJECTIVE.getId()) &&
-                    (objective.getObjectiveQualify() <=Constants.MIN_VALUE_QUALIFY || objective.getObjectiveQualify()>Constants.MAX_VALUE_QUALIFY)){
-                return new ResponseDTO(HttpStatus.OK,Constants.INVALID_RATING, null);
+                    (objective.getObjectiveQualify() <= Constants.MIN_VALUE_QUALIFY || objective.getObjectiveQualify() > Constants.MAX_VALUE_QUALIFY)) {
+                return new ResponseDTO(HttpStatus.OK, Constants.INVALID_RATING, null);
             }
 
-            if(!objective.getStatusId().equals(StatusEnum.CLOSED_OBJECTIVE.getId()) ) {
+            if (!objective.getStatusId().equals(StatusEnum.CLOSED_OBJECTIVE.getId())) {
                 entity.setObjectiveQualify(Constants.MIN_VALUE_QUALIFY);
-            }
-            else
+            } else
                 entity.setObjectiveQualify(objective.getObjectiveQualify());
 
             entity.setObjectiveObservations(objective.getObjectiveObservations());
-            Status status=statusRepository.findByStatusId(objective.getStatusId());
+            Status status = statusRepository.findByStatusId(objective.getStatusId());
             entity.setStatus(status);
             objectiveRepository.save(entity);
-            return new ResponseDTO(HttpStatus.OK,Constants.EMPTY_MESSAGE, Boolean.TRUE);
+            return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, Boolean.TRUE);
 
-        }catch(Exception err){
-            log.error(err.getMessage(), err);
-            return new ResponseDTO(HttpStatus.BAD_REQUEST,err.getMessage(), null);
-        }
-
-    }
-
-    public ResponseDTO getObjectivesByUserId(Long userId) {
-        try{
-            List<Objective> objectives = objectiveRepository.findByUserUserId(userId);
-            List<ObjetiveDTO> result = objectives.stream().map(obj -> new ObjetiveDTO(obj)).collect(Collectors.toList());
-            return new ResponseDTO(HttpStatus.OK,Constants.EMPTY_MESSAGE, result);
-        }catch(Exception err){
+        } catch (Exception err) {
             log.error(err.getMessage(), err);
             return new ResponseDTO(HttpStatus.BAD_REQUEST, err.getMessage(), null);
         }
 
     }
+
+    public ResponseDTO getObjectivesByUserId(Long userId) {
+        try {
+            List<Objective> objectives = objectiveRepository.findByUserUserId(userId);
+            List<ObjetiveDTO> result = objectives.stream().map(obj -> new ObjetiveDTO(obj)).collect(Collectors.toList());
+            return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, result);
+        } catch (Exception err) {
+            log.error(err.getMessage(), err);
+            return new ResponseDTO(HttpStatus.BAD_REQUEST, err.getMessage(), null);
+        }
+
+    }
+
+    public ResponseDTO findObjectiveFilter(ObjectiveFilterDTO objectiveFilterDTO) {
+
+        try {
+            List<Objective> objectives = objectiveRepository.findAll();
+
+
+            if (objectiveFilterDTO.getObjectiveTypeId() != null) {
+                objectives = objectives.stream()
+                        .filter(obj -> obj.getObjectiveType().getObjectiveTypeId().equals(objectiveFilterDTO.getObjectiveTypeId()))
+                        .collect(Collectors.toList());
+
+            }
+            if (objectiveFilterDTO.getGroupId() != null) {
+                objectives = objectives.stream()
+                        .filter(obj -> obj.getGroup().getGroupId().equals(objectiveFilterDTO.getGroupId()))
+                        .collect(Collectors.toList());
+
+            }
+            if (objectiveFilterDTO.getUserId() != null) {
+                objectives = objectives.stream()
+                        .filter(obj -> obj.getUser().getUserId().equals(objectiveFilterDTO.getUserId()))
+                        .collect(Collectors.toList());
+
+            }
+
+            if (objectiveFilterDTO.getStatusId() != null) {
+                objectives = objectives.stream()
+                        .filter(obj -> obj.getStatus().getStatusId().equals(objectiveFilterDTO.getStatusId()))
+                        .collect(Collectors.toList());
+
+
+            }
+            List<ObjFilterResponseDTO> listObj = new ArrayList<>();
+            for(Objective objective:objectives) {
+                ObjFilterResponseDTO obj = new ObjFilterResponseDTO();
+                obj.setObjectiveId(objective.getObjectiveId());
+                obj.setObjectiveDescribe(objective.getObjectiveDescribe());
+                obj.setObjectiveType(objective.getObjectiveType());
+                obj.setStatus(objective.getStatus());
+                obj.setGroupId(objective.getGroup().getGroupId());
+                obj.setUserId(objective.getUser().getUserId());
+
+                listObj.add(obj);
+            }
+            listObj = listObj.stream().skip((objectiveFilterDTO.getSet()-Constants.ONE_VALUE)*Constants.ONE_HUNDRED_LIMIT).limit(Constants.ONE_HUNDRED_LIMIT).toList();
+            return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, listObj);
+
+        } catch (Exception err) {
+            return new ResponseDTO(HttpStatus.BAD_REQUEST, err.getMessage(), null);
+
+
+        }
+
+    }
+
 
 }
 

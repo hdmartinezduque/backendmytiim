@@ -14,7 +14,7 @@ public class CreateObjectiveDTO implements Serializable {
     @NotEmpty(message = Constants.OBJECTIVE_DESCRIBE_REQUIRED)
     private String objectiveDescribe;
 
-    @NotNull(message = Constants.OBJECIVE_TYPE_ID_REQUIRED)
+    @NotNull(message = Constants.OBJECTIVE_TYPE_ID_REQUIRED)
     private Long objectiveTypeId;
 
     @NotNull(message = Constants.USER_ID_REQUIRED)
@@ -22,4 +22,7 @@ public class CreateObjectiveDTO implements Serializable {
 
     @NotEmpty(message = Constants.COMMITMENT_REQUIRED)
     private List<CommitmentDTO> commitments;
+
+    @NotNull(message = Constants.PERIOD_REQUIRED)
+    private Long periodId;
 }

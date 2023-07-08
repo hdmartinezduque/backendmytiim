@@ -12,5 +12,6 @@ public interface FollowClosePollRepository extends JpaRepository<FollowClosePoll
     FollowClosePoll findByFollowClosePollId(Long followClosePollId);
 
     List<FollowClosePoll> findByPollTypePollTypeId(Long pollTypeId);
+
 }
 

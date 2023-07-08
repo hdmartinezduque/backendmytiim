@@ -42,4 +42,7 @@ public class Commitment implements Serializable {
     @Column(name = "commitment_goal")
     private Double commitmentGoal;
 
+    @Column(name="commitment_created_date")
+    private LocalDate createDate;
+
 }

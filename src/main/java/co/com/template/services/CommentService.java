@@ -12,12 +12,9 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.*;
+import java.util.stream.Collectors;
 
-
-
-import java.util.ArrayList;
-
-import java.util.List;
 @RequiredArgsConstructor
 @Service
 @Transactional
@@ -87,7 +84,13 @@ public class CommentService {
             commentRepository.save(comment);
 
             if (createCommentDTO.getCommentTypeId().equals(Constants.DEFAULT_COMMENT_TYPE_ID)) {
-                emailService.sendMail(comment.getUserFrom(), objective.getUser(), comment);
+
+                Map<String, Object> data = new HashMap<>();
+                data.put(Constants.EMAIL_NAME, comment.getUserFrom().getUserName());
+                data.put(Constants.EMAIL_LASTNAME, comment.getUserFrom().getUserLastName());
+                data.put(Constants.EMAIL_DATE, Util.convertToDateTimeHourFormatted(comment.getCommentDate(),Constants.DATETIME_FORMAT));
+                data.put(Constants.EMAIL_DESCRIBE, comment.getCommentDescribe());
+                emailService.sendMail(data, objective.getUser().getUserEmail(), Constants.SUBJECT_MESSAGE + comment.getUserFrom().getUserName(), Constants.INDEX_TEMPLATE);
                 return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, createCommentDTO);
             }
         } catch (Exception e) {
@@ -132,53 +135,78 @@ public class CommentService {
                                                      CommentType commentType, Status status, User userFrom) {
         try {
             Comment comm = new Comment();
-
-
             comm.setCommentCommentType(commentType);
             comm.setUserFrom(userFrom);
             comm.setUserTo(user);
+
+
             comm.setStatus(status);
             comm.setCommentType(Boolean.TRUE);
             comm.setCommentDescribe(createRecognitionDTO.getCommentDescribe());
 
             commentRepository.save(comm);
-
-            emailService.sendMail(comm.getUserFrom(), comm.getUserTo(), comm);
-
-
+            Map<String, Object> data = new HashMap<>();
+            data.put(Constants.EMAIL_NAME, comm.getUserFrom().getUserName());
+            data.put(Constants.EMAIL_LASTNAME, comm.getUserFrom().getUserLastName());
+            data.put(Constants.EMAIL_DATE, Util.convertToDateTimeHourFormatted(comm.getCommentDate(),Constants.DATETIME_FORMAT));
+            data.put(Constants.EMAIL_DESCRIBE, comm.getCommentDescribe());
+            emailService.sendMail(data, comm.getUserTo().getUserEmail(), Constants.SUBJECT_MESSAGE + comm.getUserFrom().getUserName(), Constants.INDEX_TEMPLATE);
         } catch (Exception e) {
             log.error(e.getMessage(),e);
-
         }
-
     }
-     public ResponseDTO getCommentRecognition() {
+     public ResponseDTO getCommentRecognition(RecognitionFilterDTO recognitionFilterDTO) {
+         try {
+
+             List<Comment> comments = commentRepository.findTop20ByCommentCommentTypeCommentTypeIdOrderByCommentDateDesc(Constants.DEFAULT_RECOGNITION_STATUS_ID);
 
 
-         List<Comment> com = commentRepository.findTop20ByOrderByCommentDateDesc();
-         List<RecognitionCommentDTO> recognitionCommentDTO = new ArrayList<>();
+             if (recognitionFilterDTO.getGroupId() != null) {
+                 comments = comments.stream()
+                         .filter(com -> com.getUserFrom().getGroup().getGroupId().equals(recognitionFilterDTO.getGroupId()))
+                         .collect(Collectors.toList());
 
-         for (Comment c : com) {
-             RecognitionCommentDTO commentModel = new RecognitionCommentDTO();
+             }
+             if (recognitionFilterDTO.getUserId() != null) {
+                 comments = comments.stream()
+                         .filter(com -> com.getUserFrom().getUserId().equals(recognitionFilterDTO.getUserId()))
+                         .collect(Collectors.toList());
 
-             commentModel.setCommentId(c.getCommentId());
-             commentModel.setUserId(c.getUserFrom().getUserId());
-             commentModel.setUserName(c.getUserFrom().getUserName());
-             commentModel.setUserLastName(c.getUserFrom().getUserLastName());
-             String date = Util.convertToDateTimeHourFormatted(c.getCommentDate(), Constants.DATETIME_FORMAT);
-             commentModel.setCommentTypeId(Constants.DEFAULT_RECOGNITION_STATUS_ID);
-             commentModel.setCommentDate(date);
-             commentModel.setCommentDescribe(c.getCommentDescribe());
-             commentModel.setUser(c.getUserTo().getUser());
+             }
 
+             if (recognitionFilterDTO.getCommentDateInit() != null && recognitionFilterDTO.getCommentDateFinal() != null) {
+                 comments = comments.stream()
+                         .filter(com -> com.getCommentDate().isAfter(recognitionFilterDTO.getCommentDateInit().atStartOfDay()) &&
+                                 com.getCommentDate().isBefore(recognitionFilterDTO.getCommentDateFinal().atStartOfDay()))
+                         .collect(Collectors.toList());
 
-             recognitionCommentDTO.add(commentModel);
+             }
+
+            List<CommentFilterResponseDTO> listComment = new ArrayList<>();
+             for (Comment c : comments) {
+                 CommentFilterResponseDTO commentModel = new CommentFilterResponseDTO();
+
+                 commentModel.setCommentId(c.getCommentId());
+                 commentModel.setUserId(c.getUserFrom().getUserId());
+                 commentModel.setUserName(c.getUserFrom().getUserName());
+                 commentModel.setUserLastName(c.getUserFrom().getUserLastName());
+                 String date = Util.convertToDateTimeHourFormatted(c.getCommentDate(), Constants.DATETIME_FORMAT);
+                 commentModel.setCommentTypeId(c.getCommentCommentType().getCommentTypeId());
+                 commentModel.setCommentDate(date);
+                 commentModel.setCommentDescribe(c.getCommentDescribe());
+                 commentModel.setUser(c.getUserTo().getUser());
+
+                 listComment.add(commentModel);
+             }
+             listComment = listComment.stream().skip((recognitionFilterDTO.getSet()-Constants.ONE_VALUE)*Constants.ONE_HUNDRED_LIMIT).limit(Constants.ONE_HUNDRED_LIMIT).toList();
+             return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, listComment);
+
+         }catch (Exception err){
+
+             return new ResponseDTO(HttpStatus.BAD_REQUEST, err.getMessage(), null);
          }
-         return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, recognitionCommentDTO);
-
 
      }
-
 
 
 
