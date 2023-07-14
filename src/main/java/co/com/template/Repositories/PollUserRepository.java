@@ -14,7 +14,6 @@ public interface PollUserRepository extends JpaRepository<PollUser, Long> {
 
     PollUser findByUserUserIdAndPollPollId(Long userId, Long pollId);
 
-    List<PollUser> findByPollPollId(Long pollId);
+    List<PollUser> findByPollPeriodPeriodIdAndPollCodeStartsWith(Long periodId, String code);
 
-    List<PollUser> findByCreatedDateBetweenAndPollCodeStartsWith(LocalDate startDate, LocalDate endDate, String code);
 }

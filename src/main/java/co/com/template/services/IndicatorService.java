@@ -23,18 +23,12 @@ import java.util.Objects;
 public class IndicatorService {
 
     private final UserRepository userRepository;
-
     private final ObjectiveRepository objectiveRepository;
-
     private final PeriodRepository periodRepository;
-
     private final CommitmentRepository commitmentRepository;
-
     private final PeriodService periodService;
-
     private final DetailPollRepository detailPollRepository;
     private final PollUserRepository pollUserRepository;
-
 
     public ResponseDTO getIndicatorObjective(Long periodId) {
         try {
@@ -43,19 +37,19 @@ public class IndicatorService {
 
             int totalUsers = allUsers.size();
 
-            List<Objective> objectivesInPeriod = objectiveRepository.findByCreateDateBetween(
-                    period.getStartPeriod().atStartOfDay(), period.getEndPeriod().atStartOfDay());
+            List<Objective> objectivesInPeriod = objectiveRepository.findByPeriodPeriodId(period.getPeriodId());
 
             List<User> userIdsWithObjectives = objectivesInPeriod.stream()
                     .map(Objective::getUser)
                     .distinct().toList();
             int usersWithObjectives = userIdsWithObjectives.size();
 
-            double percentageObjectivesCreated = (double) usersWithObjectives / totalUsers * Constants.ONE_HUNDRED_INDEX;
+            double percentageObjectivesCreated = Double.isNaN((double) usersWithObjectives / totalUsers * Constants.ONE_HUNDRED_INDEX) ? Constants.ZERO_VALUE
+                    : (double) usersWithObjectives / totalUsers * Constants.ONE_HUNDRED_INDEX;
 
             double percentageObjectivesNoCreated = Constants.ONE_HUNDRED_INDEX - percentageObjectivesCreated;
 
-            IndicatorDTO indicatorDTO = new IndicatorDTO(totalUsers, percentageObjectivesCreated, percentageObjectivesNoCreated);
+            IndicatorDTO indicatorDTO = new IndicatorDTO(totalUsers, percentageObjectivesCreated, percentageObjectivesNoCreated, period.getPeriodId());
 
             return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, indicatorDTO);
         } catch (Exception err) {
@@ -114,20 +108,16 @@ public class IndicatorService {
     public ResponseDTO getIndicatorCommitment(Long periodId) {
         try {
             Period period= this.validatePeriod(periodId);
-            List<User> allUsers = userRepository.findByActivatedDateLessThan(period.getEndPeriod());
-            int totalUsers = allUsers.size();
 
-            List<Commitment> commitmentInPeriod = commitmentRepository.findByCreateDateBetween(
-                    period.getStartPeriod(), period.getEndPeriod());
-            List<User> userIdsWithCommitment = commitmentInPeriod.stream()
-                    .map(Commitment::getObjective)
-                    .map(Objective::getUser)
-                    .distinct().toList();
-            int usersWithCommitment = userIdsWithCommitment.size();
-            double percentageCommitmentCreated = (double) usersWithCommitment / totalUsers * Constants.ONE_HUNDRED_INDEX;
+            List<Commitment> commitmentInPeriod = commitmentRepository.findByObjectivePeriodPeriodId(period.getPeriodId());
+            int commitmentsTotal = commitmentInPeriod.size();
+            int completedCommitment = commitmentInPeriod.stream().filter(comm -> comm.getCommitmentGoal().equals(comm.getCommitmentAdvance())).toList().size();
+
+            double percentageCommitmentCreated = Double.isNaN( (double)  completedCommitment /commitmentsTotal * Constants.ONE_HUNDRED_INDEX)?Constants.ZERO_VALUE
+                    :(double) completedCommitment / commitmentsTotal * Constants.ONE_HUNDRED_INDEX;
             double percentageCommitmentNoCreated = Constants.ONE_HUNDRED_INDEX - percentageCommitmentCreated;
 
-            IndicatorDTO indicatorDTO = new IndicatorDTO(totalUsers, percentageCommitmentCreated, percentageCommitmentNoCreated);
+            IndicatorDTO indicatorDTO = new IndicatorDTO(commitmentsTotal, percentageCommitmentCreated, percentageCommitmentNoCreated, period.getPeriodId());
             return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, indicatorDTO);
         } catch (Exception err) {
             log.error(err.getMessage(), err);
@@ -146,8 +136,7 @@ public class IndicatorService {
             Period period= this.validatePeriod(periodId);
 
             List<EmployeeDataCommitment> employeeDataCommitmentList = new ArrayList<>();
-            List<Commitment> commitments = commitmentRepository.findByCreateDateBetween(
-                    period.getStartPeriod(), period.getEndPeriod());
+            List<Commitment> commitments = commitmentRepository.findByObjectivePeriodPeriodId(period.getPeriodId());
 
             for (Commitment commit : commitments) {
                 String username = commit.getObjective().getUser().getUser();
@@ -204,27 +193,25 @@ public class IndicatorService {
         try {
             Period period= this.validatePeriod(periodId);
 
-            LocalDate endDate = period.getEndPeriod();
-            LocalDate startDate = period.getStartPeriod();
-
-            List<PollUser> users = pollUserRepository.findByCreatedDateBetweenAndPollCodeStartsWith(startDate, endDate, TypePollEnum.FOLLOW.getStart());
+            List<PollUser> users = pollUserRepository.findByPollPeriodPeriodIdAndPollCodeStartsWith(period.getPeriodId(), TypePollEnum.FOLLOW.getStart());
             List<User> uniqueUsers = users.stream()
                     .map(PollUser::getUser).distinct()
                     .toList();
             int totatlUsers = uniqueUsers.size();
 
-            List<DetailPoll> detailPolls = detailPollRepository.findByAnswerDateBetween(startDate, endDate);
+            List<DetailPoll> detailPolls = detailPollRepository.findByPollCodeStartsWithAndPollPeriodPeriodId(TypePollEnum.FOLLOW.getStart(), period.getPeriodId());
 
             List<User> userIdsWithPolls = detailPolls.stream()
                     .map(DetailPoll::getUser)
                     .distinct().toList();
             int usersWithPolls = userIdsWithPolls.size();
 
-            double percentageUsersWithPolls = (double) usersWithPolls / totatlUsers * Constants.ONE_HUNDRED_INDEX;
+            double percentageUsersWithPolls = Double.isNaN((double) usersWithPolls / totatlUsers * Constants.ONE_HUNDRED_INDEX) ? Constants.ZERO_VALUE
+                        : (double) usersWithPolls / totatlUsers * Constants.ONE_HUNDRED_INDEX;
 
             double percentageUsersWithoutPolls = Constants.ONE_HUNDRED_INDEX - percentageUsersWithPolls;
 
-            IndicatorDTO indicatorDTO = new IndicatorDTO(totatlUsers, percentageUsersWithPolls, percentageUsersWithoutPolls);
+            IndicatorDTO indicatorDTO = new IndicatorDTO(totatlUsers, percentageUsersWithPolls, percentageUsersWithoutPolls, period.getPeriodId());
             return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, indicatorDTO);
 
         } catch (Exception err) {
@@ -298,16 +285,17 @@ public class IndicatorService {
                     .toList();
             int usersWithPolls = userIdsWithPolls.size();
 
-            List<PollUser> users = pollUserRepository.findByCreatedDateBetweenAndPollCodeStartsWith(period.getStartPeriod(), period.getEndPeriod(), TypePollEnum.CLOSE.getStart());
+            List<PollUser> users = pollUserRepository.findByPollPeriodPeriodIdAndPollCodeStartsWith(period.getPeriodId(), TypePollEnum.CLOSE.getStart());
             List<User> uniqueUsers = users.stream()
                     .map(PollUser::getUser).distinct()
                     .toList();
             int totalUsers = uniqueUsers.size();
 
-            double percentageUsersWithPolls = (double) usersWithPolls / totalUsers * Constants.ONE_HUNDRED_INDEX;
+            double percentageUsersWithPolls =Double.isNaN((double) usersWithPolls / totalUsers * Constants.ONE_HUNDRED_INDEX) ? Constants.ZERO_VALUE
+                    : (double) usersWithPolls / totalUsers * Constants.ONE_HUNDRED_INDEX;
             double percentageUsersWithoutPolls = Constants.ONE_HUNDRED_INDEX - percentageUsersWithPolls;
 
-            IndicatorDTO indicatorDTO = new IndicatorDTO(totalUsers, percentageUsersWithPolls, percentageUsersWithoutPolls);
+            IndicatorDTO indicatorDTO = new IndicatorDTO(totalUsers, percentageUsersWithPolls, percentageUsersWithoutPolls, period.getPeriodId());
 
             return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, indicatorDTO);
 

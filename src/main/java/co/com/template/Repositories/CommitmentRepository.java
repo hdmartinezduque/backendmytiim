@@ -16,6 +16,6 @@ public interface CommitmentRepository extends JpaRepository<Commitment, Long> {
 
     List<Commitment> findByObjectiveObjectiveId(Long objectiveId);
 
-    List<Commitment> findByCreateDateBetween(LocalDate startPeriod, LocalDate endPeriod);
+    List<Commitment> findByObjectivePeriodPeriodId(Long periodId);
 
 }
