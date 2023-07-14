@@ -7,6 +7,7 @@ import co.com.template.Repositories.entities.Objective;
 import co.com.template.Repositories.entities.Period;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -20,7 +21,7 @@ public interface ObjectiveRepository  extends JpaRepository<Objective, Long> {
 
     Objective findByObjectiveId(Long objectiveId);
 
-    List<Objective> findByCreateDateBetween(LocalDate startPeriod, LocalDate endPeriod);
+    List<Objective> findByCreateDateBetween(LocalDateTime startPeriod, LocalDateTime endPeriod);
 
     int countByUserAndCreateDateBetween(User user, LocalDate startPeriod, LocalDate endPeriod);
 

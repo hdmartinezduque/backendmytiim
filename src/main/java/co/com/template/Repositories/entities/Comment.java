@@ -31,10 +31,6 @@ public class Comment implements Serializable {
 	private User userFrom;
 
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
-	@JoinColumn(name = "comment_user_to_id", nullable = false)
-	private User userTo;
-
-	@ManyToOne(fetch = FetchType.EAGER, optional = false)
 	@JoinColumn(name = "comment_status_id", nullable = false)
 	private Status status;
 
@@ -52,6 +48,9 @@ public class Comment implements Serializable {
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
 	@JoinColumn(name = "comment_objective_id", nullable = false)
 	private Objective objective;
+
+	@Column(name = "comment_by_group")
+	private Boolean isGroup;
 
 
 }

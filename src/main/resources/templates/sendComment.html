@@ -36,11 +36,10 @@
           min-height: 108px;
         "
     >
-        <img
-                src="http://190.144.118.234/assets/icons/atom-logo-primary.svg"
-                width="167"
-                height="71"
-                style="margin: auto"
+        <img  th:src="@{${src}}"
+              width="167"
+              height="71"
+              style="margin: auto"
         />
     </div>
 </header>
@@ -112,8 +111,19 @@
             style="padding-right: 4px; font-weight: 400; font-size: 16px"
     ></b>
 </div>
-<button
+<div
         style="
+          font-size: 22px;
+          font-family: 'Nunito', sans-serif;
+          padding-top: 40px;
+          padding-bottom: 20px;
+          max-width: 428px;
+          margin: auto;
+        "
+>
+<a th:href="@{${url}}">
+    <button type ="submit"
+            style="
           border-radius: 100px;
           min-width: 310px;
           min-height: 52px;
@@ -126,9 +136,10 @@
           font-family: 'Roboto', sans-serif;
           font-weight: 700;
         "
->
-    Responder comentario
-</button>
+    >
+        Responder comentario
+    </button>
+</a></div>
 </body>
 </html>
 </html>

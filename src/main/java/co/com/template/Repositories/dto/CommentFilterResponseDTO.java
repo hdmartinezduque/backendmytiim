@@ -18,7 +18,7 @@ public class CommentFilterResponseDTO implements Serializable {
     private String commentDescribe;
     public String user;
     private Long groupId;
-
+    private Long countFeedback;
 
 
 }

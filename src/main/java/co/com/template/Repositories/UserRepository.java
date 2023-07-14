@@ -20,7 +20,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByStatusStatusIdAndActivatedDateLessThan(Long StatusStatusId, LocalDate date);
 
-    public List<User> findByStatusStatusId(Integer ACTIVE_USER);
+    List<User> findByStatusStatusId(Integer ACTIVE_USER);
+
+    List<User> findByUserIdIn(List<Long> ids);
+
+    List<User> findByActivatedDateLessThan(LocalDate endDate);
+
 
 
 

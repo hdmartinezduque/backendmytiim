@@ -21,8 +21,7 @@ public class CorsConfiguration {
                                 "http://190.144.118.234",
                                 "http://190.144.118.234:8080",
                                 "http://192.168.10.74",
-                                "http://192.168.10.74:8080",
-                                "http://192.168.10.74:8181")
+                                "http://192.168.10.74:8080")
                         .allowedMethods("GET", "POST", "PUT", "DELETE")
                         .allowedHeaders("*")
                         .allowCredentials(true)

@@ -10,10 +10,11 @@ import java.util.List;
 @Repository
 public interface CommentFeedbackRepository extends JpaRepository<CommentFeedback, Long> {
 
-    List<CommentFeedback> findByCommentCommentId(Long CommentCommentId);
-    List<CommentFeedback> findTop20ByOrderByCommentFeedbackDateDesc();
+    List<CommentFeedback> findByComment(Comment comment);
 
-    public List<CommentFeedback> findByComment(Comment comment);
+   List<CommentFeedback> findByCommentCommentId(Long commentId);
+
+
 
 }
 

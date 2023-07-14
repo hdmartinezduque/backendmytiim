@@ -3,7 +3,6 @@ package co.com.template.services;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -12,7 +11,6 @@ import co.com.template.Repositories.dto.*;
 import co.com.template.Repositories.entities.*;
 import co.com.template.utils.Constants;
 import co.com.template.utils.StatusEnum;
-import jakarta.persistence.Entity;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -66,6 +64,12 @@ public class ObjectiveService {
             entity.setUser(user);
             entity.setGroup(user.getGroup());
             entity.setPeriod(period);
+            Long alignObjective = Objects.isNull(request.getAlignObjectiveId()) ? null : request.getAlignObjectiveId();
+            entity.setAlignObjectiveId(alignObjective);
+            User userAlign = Objects.isNull(request.getAlignUserId()) ? null : userRepository.findByUserId(request.getAlignUserId());
+            entity.setAlignUser(userAlign);
+            Group alignGroup = Objects.isNull(request.getAlignGroupId()) ? null : groupRepository.findByGroupId(request.getAlignGroupId());
+            entity.setAlignGroup(alignGroup);
 
             entity = objectiveRepository.save(entity);
             List<Commitment> commitmentsEntity = new ArrayList<>();
@@ -106,6 +110,12 @@ public class ObjectiveService {
         entity.setObjectiveDescribe(objective.getObjectiveDescribe());
         entity.setObjectiveType(type);
         entity.setPeriod(period);
+        Long alignObjective = Objects.isNull(objective.getAlignObjectiveId()) ? null : objective.getAlignObjectiveId();
+        entity.setAlignObjectiveId(alignObjective);
+        User userAlign = Objects.isNull(objective.getAlignUserId()) ? null : userRepository.findByUserId(objective.getAlignUserId());
+        entity.setAlignUser(userAlign);
+        Group alignGroup = Objects.isNull(objective.getAlignGroupId()) ? null : groupRepository.findByGroupId(objective.getAlignGroupId());
+        entity.setAlignGroup(alignGroup);
         objectiveRepository.save(entity);
         return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, Boolean.TRUE);
     }
@@ -121,7 +131,7 @@ public class ObjectiveService {
         if (Objects.isNull(objectiveId)) {
             throw new CustomException(Constants.OBJECT_NOT_EXISTS_ERROR, HttpStatus.OK);
         }
-        return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, new ObjetiveDTO(objective));
+        return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, new ObjectiveDTO(objective));
     }
 
     public ResponseDTO getObjectiveForGroupAndForUser(Long GroupGroupId, Long UserUserId) {
@@ -190,7 +200,7 @@ public class ObjectiveService {
     public ResponseDTO getObjectivesByUserId(Long userId) {
         try {
             List<Objective> objectives = objectiveRepository.findByUserUserId(userId);
-            List<ObjetiveDTO> result = objectives.stream().map(obj -> new ObjetiveDTO(obj)).collect(Collectors.toList());
+            List<ObjectiveDTO> result = objectives.stream().map(obj -> new ObjectiveDTO(obj)).collect(Collectors.toList());
             return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, result);
         } catch (Exception err) {
             log.error(err.getMessage(), err);

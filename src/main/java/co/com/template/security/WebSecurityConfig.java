@@ -57,15 +57,12 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/auth/login").permitAll()
                                 .requestMatchers("/indicators/**").permitAll()
+                                .requestMatchers("/notifications/**").permitAll()
                         .anyRequest().authenticated());
         http.authenticationProvider(authenticationProvider());
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/js/**", "/images/**");
     }
 }

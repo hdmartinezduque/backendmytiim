@@ -21,5 +21,4 @@ public class NotificationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDTO(HttpStatus.BAD_REQUEST,err.getMessage(),null));
         }
     }
-
 }

@@ -42,6 +42,7 @@ public class CommentFeedbackService {
     private final StatusRepository statusRepository;
 
     private final CommentFeedbackRepository commentFeedbackRepository;
+    private final ConfigurationSystemService configurationService;
 
 
     public ResponseDTO setCommentFeedback(CreateCommentFeedbackDTO createCommentFeedbackDTO)   {
@@ -60,14 +61,15 @@ public class CommentFeedbackService {
             commentFeedback.setCommentFeedbackType(Boolean.TRUE);
 
             commentFeedbackRepository.save(commentFeedback);
+
             Map<String, Object> data = new HashMap<>();
             data.put(Constants.EMAIL_NAME, commentFeedback.getUserFrom().getUserName());
             data.put(Constants.EMAIL_LASTNAME, commentFeedback.getUserFrom().getUserLastName());
-            data.put(Constants.EMAIL_FEEDBACK_URL, Constants.URL_FEEDBACK);
+            data.put(Constants.EMAIL_URL, configurationService.getConfigValue(Constants.URL_SYSTEM)+Constants.EMAIL_FEEDBACK_URL);
             data.put(Constants.EMAIL_DATE, Util.convertToDateTimeHourFormatted(commentFeedback.getCommentFeedbackDate(),Constants.DATETIME_FORMAT));
             data.put(Constants.EMAIL_DESCRIBE, commentFeedback.getCommentFeedbackDescribe());
-            emailService.sendMail(data, commentFeedback.getUserFrom().getUserEmail(), Constants.SUBJECT_MESSAGE + comment.getUserFrom().getUserName(), Constants.FEEDBACK_TEMPLATE);
-
+            data.put(Constants.EMAIL_IMAGE_URL, configurationService.getConfigValue(Constants.IMAGE_URL_SYSTEM));
+            emailService.sendMail(data, commentFeedback.getUserFrom().getUserEmail(), Constants.SUBJECT_MESSAGE + comment.getUserFrom().getUserName(), Constants.FEEDBACK_TEMPLATE, null);
 
             return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, createCommentFeedbackDTO);
         }catch(Exception err){
@@ -81,7 +83,9 @@ public class CommentFeedbackService {
 
         Comment comment = commentRepository.findByCommentId(CommentCommentId);
         List<CommentFeedback> com = commentFeedbackRepository.findByComment(comment);
+
         List<FeedbackCommentDTO> feedbackCommentDTO = new ArrayList<>();
+
 
 
         for (CommentFeedback c : com) {
@@ -96,12 +100,16 @@ public class CommentFeedbackService {
             feedback.setCommentFeedbackDate(date);
             feedback.setCommentFeedbackDescribe(c.getCommentFeedbackDescribe());
 
-            feedbackCommentDTO.add(feedback);
+
+           feedbackCommentDTO.add(feedback);
 
         }
+
+
         return new ResponseDTO(HttpStatus.OK, Constants.EMPTY_MESSAGE, feedbackCommentDTO);
 
 
     }
+
 
 }

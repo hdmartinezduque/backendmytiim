@@ -25,4 +25,8 @@ public class CreateObjectiveDTO implements Serializable {
 
     @NotNull(message = Constants.PERIOD_REQUIRED)
     private Long periodId;
+
+    private Long alignGroupId;
+    private Long alignUserId;
+    private Long alignObjectiveId;
 }

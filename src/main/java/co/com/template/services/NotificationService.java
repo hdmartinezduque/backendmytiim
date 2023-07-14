@@ -13,7 +13,6 @@ import co.com.template.utils.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -39,6 +37,7 @@ public class NotificationService {
     private final UserRepository userRepository;
     private final EmailServiceImpl emailService;
     private final NotificationLogService notificationLogService;
+    private final ConfigurationSystemService configurationService;
 
     @Scheduled(cron = "${cron.job.schedule}")
     public ResponseDTO createPollNotifications(){
@@ -58,7 +57,9 @@ public class NotificationService {
                 if(Objects.isNull(poll)){
                     Poll newPoll = new Poll(period, statusRepository.findByStatusId(StatusEnum.ACTIVE_POLL.getId()),
                             TypePollEnum.FOLLOW.getStart().concat(Constants.INCREMENTAL_VALUE.toString()).concat(period.getDescribe().replaceAll(Constants.DASH_VALUE,Constants.EMPTY_MESSAGE)),
-                            TypePollEnum.FOLLOW.getDescribe(), period.getStartPeriod(), period.getStartPeriod().plusDays(Constants.INCREMENTAL_DAYS), Constants.INCREMENTAL_VALUE);
+                            TypePollEnum.FOLLOW.getDescribe(), period.getStartPeriod(),
+                            period.getStartPeriod().plusDays(Long.parseLong(configurationService.getConfigValue(Constants.SYSTEM_INCREMENTAL_DAYS))),
+                            Constants.INCREMENTAL_VALUE);
                     this.createPollQuestionsToNewPoll(newPoll, TypePollEnum.FOLLOW.getId());
                 }
                 else{
@@ -67,7 +68,7 @@ public class NotificationService {
                                 TypePollEnum.FOLLOW.getStart().concat(String.valueOf(Integer.sum(poll.getIndex(),Constants.INCREMENTAL_VALUE))).
                                                 concat(period.getDescribe().replaceAll(Constants.DASH_VALUE,Constants.EMPTY_MESSAGE)),
                                 TypePollEnum.FOLLOW.getDescribe(), poll.getEnd().plusDays(Constants.INCREMENTAL_VALUE),
-                                poll.getEnd().plusDays(Constants.INCREMENTAL_VALUE).plusDays(Constants.INCREMENTAL_DAYS),
+                                poll.getEnd().plusDays(Constants.INCREMENTAL_VALUE).plusDays(Long.parseLong(configurationService.getConfigValue(Constants.SYSTEM_INCREMENTAL_DAYS))),
                                 Integer.sum(poll.getIndex(),Constants.INCREMENTAL_VALUE));
                         this.createPollQuestionsToNewPoll(newPoll, TypePollEnum.FOLLOW.getId());
                     }
@@ -93,16 +94,16 @@ public class NotificationService {
         }
     }
 
-    @Async
-    private void sendNotifications(List<User> users){
+    private void sendNotifications(List<User> users, Poll poll){
         users.forEach(user -> {
             try {
                 notificationLogService.saveLog(String.format(Constants.LOG_SEND_EMAIL, user.getUserEmail()), TypeNotificationEnum.AUTOMATIC_POLLS.getId());
                 Map<String, Object> data = new HashMap<>();
                 data.put(Constants.EMAIL_NAME, user.getUserName());
-                data.put(Constants.EMAIL_POLL_URL, Constants.URL_POLL);
-                data.put(Constants.EMAIL_IMAGE_URL, Constants.URL_IMAGE);
-                emailService.sendMail(data, user.getUserEmail(), Constants.SUBJECT_NOTIFICATION_EMAIL, Constants.NOTIFICATION_TEMPLATE);
+                data.put(Constants.EMAIL_URL, configurationService.getConfigValue(Constants.URL_SYSTEM)+Constants.URL_POLL);
+                data.put(Constants.EMAIL_IMAGE_URL, configurationService.getConfigValue(Constants.IMAGE_URL_SYSTEM));
+                emailService.sendMail(data, user.getUserEmail(), String.format(Constants.SUBJECT_NOTIFICATION_EMAIL,poll.getCode(),poll.getDescribe().toLowerCase()),
+                        Constants.NOTIFICATION_TEMPLATE, null);
             } catch (Exception e) {
                 notificationLogService.saveLog(Constants.LOG_SEND_EMAIL_ERROR.concat(user.getUserEmail()).concat(Constants.COMMA_SEPARATOR).concat(e.getMessage())
                         , TypeNotificationEnum.AUTOMATIC_POLLS.getId());
@@ -112,8 +113,8 @@ public class NotificationService {
 
     private void saveNotifications(Poll poll){
         try{
-            List<User> users = userRepository.findByStatusStatusIdAndActivatedDateLessThan(
-                    StatusEnum.ACTIVE_USER.getId(), LocalDate.now().minusDays(Constants.INCREMENTAL_DAYS));
+            List<User> users = userRepository.findByStatusStatusIdAndActivatedDateLessThan(StatusEnum.ACTIVE_USER.getId(),
+                    LocalDate.now().minusDays(Long.parseLong(configurationService.getConfigValue(Constants.SYSTEM_INCREMENTAL_DAYS))));
             Status statusInProgress = statusRepository.findByStatusId(StatusEnum.IN_PROGRESS_POLL_USER.getId());
             List<PollUser> userNotifications = new ArrayList<>();
             users.forEach(user -> {
@@ -125,10 +126,8 @@ public class NotificationService {
                 userNotifications.add(pollUser);
             });
             pollUserRepository.saveAll(userNotifications);
-            notificationLogService.saveLog(String.format(Constants.LOG_SAVE_NOTIFICATION,poll.getCode()).concat(users
-                    .stream().map(User::getUserEmail).collect(Collectors.joining(Constants.COMMA_SEPARATOR)))
-                    , TypeNotificationEnum.AUTOMATIC_POLLS.getId());
-            this.sendNotifications(users);
+            notificationLogService.saveLog(String.format(Constants.LOG_SAVE_NOTIFICATION,poll.getCode()), TypeNotificationEnum.AUTOMATIC_POLLS.getId());
+            this.sendNotifications(users, poll);
         }catch(Exception err){
             notificationLogService.saveLog(String.format(Constants.LOG_SAVE_NOTIFICATION_ERROR,poll.getCode()).concat(err.getMessage())
                     , TypeNotificationEnum.AUTOMATIC_POLLS.getId());
@@ -138,13 +137,18 @@ public class NotificationService {
     @Transactional
     private void createPollQuestionsToNewPoll(Poll newPoll, Long typePollId){
         try {
-            pollRepository.save(newPoll);
             List<PollQuestion> pollQuestions = new ArrayList<>();
             List<FollowClosePoll> items = followClosePollRepository.findByPollTypePollTypeId(typePollId);
-            items.forEach(i -> pollQuestions.add(new PollQuestion(null, newPoll, i.getQuestion(), i.getRequired())));
-            pollQuestionRepository.saveAll(pollQuestions);
-            notificationLogService.saveLog(Constants.LOG_SAVE_POLL_QUESTIONS+newPoll.getCode(), TypeNotificationEnum.AUTOMATIC_POLLS.getId());
-            this.saveNotifications(newPoll);
+            if(CollectionUtils.isEmpty(items)){
+                notificationLogService.saveLog(Constants.NO_CONFIGURATION_POLL_QUESTIONS+newPoll.getCode(), TypeNotificationEnum.AUTOMATIC_POLLS.getId());
+            }
+            else {
+                items.forEach(i -> pollQuestions.add(new PollQuestion(null, newPoll, i.getQuestion(), i.getRequired())));
+                pollRepository.save(newPoll);
+                pollQuestionRepository.saveAll(pollQuestions);
+                notificationLogService.saveLog(Constants.LOG_SAVE_POLL_QUESTIONS + newPoll.getCode(), TypeNotificationEnum.AUTOMATIC_POLLS.getId());
+                this.saveNotifications(newPoll);
+            }
         }catch(Exception err){
             notificationLogService.saveLog(Constants.LOG_SAVE_POLL_QUESTIONS_ERROR.concat(newPoll.getCode()).concat(Constants.DASH_VALUE)
                     .concat(err.getMessage()), TypeNotificationEnum.AUTOMATIC_POLLS.getId());

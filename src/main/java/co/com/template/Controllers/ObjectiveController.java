@@ -1,13 +1,13 @@
 package co.com.template.Controllers;
 
 import co.com.template.Repositories.dto.*;
+import co.com.template.utils.Constants;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import co.com.template.Repositories.entities.Objective;
 import co.com.template.services.ObjectiveService;
 
 
@@ -42,7 +42,7 @@ public class ObjectiveController {
 		try {
 			return ResponseEntity.status(HttpStatus.OK).body(objectiveService.updateObjective(objectiveId, objective));
 		} catch(Exception err){
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDTO(HttpStatus.BAD_REQUEST,err.getMessage(),null));
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR, Constants.PROCESS_ERROR,null));
 		}
 	}
 

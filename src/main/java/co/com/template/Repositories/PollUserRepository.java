@@ -4,6 +4,7 @@ import co.com.template.Repositories.entities.PollUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -14,4 +15,6 @@ public interface PollUserRepository extends JpaRepository<PollUser, Long> {
     PollUser findByUserUserIdAndPollPollId(Long userId, Long pollId);
 
     List<PollUser> findByPollPollId(Long pollId);
+
+    List<PollUser> findByCreatedDateBetweenAndPollCodeStartsWith(LocalDate startDate, LocalDate endDate, String code);
 }

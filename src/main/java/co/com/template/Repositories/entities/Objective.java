@@ -3,7 +3,7 @@ package co.com.template.Repositories.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -27,7 +27,7 @@ public class Objective implements Serializable {
 	private User user;
 
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
-	@JoinColumn(name = "objective_grupo_id", nullable = false)
+	@JoinColumn(name = "objective_group_id", nullable = false)
 	private Group group;
 
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
@@ -45,10 +45,21 @@ public class Objective implements Serializable {
 	private String objectiveObservations;
 
 	@Column(name="objective_created_date")
-	private LocalDate createDate;
+	private LocalDateTime createDate;
 
-	@ManyToOne(fetch = FetchType.EAGER, optional = false)
-	@JoinColumn(name = "objective_period_id", nullable = false)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "objective_period_id")
 	private Period period;
+
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "objective_align_group_id")
+	private Group alignGroup;
+
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "objective_align_user_id")
+	private User alignUser;
+
+	@Column(name = "objective_align_objective_id")
+	private Long alignObjectiveId;
 
 }
